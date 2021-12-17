@@ -104,24 +104,19 @@ rfm.show(4,0)
 #########################
 #   Distribution Test   #
 #########################
-#r_dist = rfm.select('ifa', 'last_seen').withColumn('last_seen_weeks', (F.col('last_seen')/7)).distinct()
-#r_dist = r_dist.groupBy('last_seen_weeks').agg(F.count('ifa').alias('ifa_count')).sort(col('last_seen_weeks'), ascending = True)
 r_dist = rfm.groupBy('last_seen','carrier').agg(F.countDistinct('ifa').alias('ifa_count')).sort(col('last_seen'), ascending = True).cache()
 r_dist.show(20,0)
 
-#r_dist.coalesce(1).write.csv('s3a://ada-dev/azeef/projects/'+COUNTRY+'/202110/smart_dualsim/'+MONTH+'/rfm/dist_test/r_dist', header = True, mode='overwrite')
 
 ### F Distribution
 f_dist = rfm.groupBy('data_usage_freq','carrier').agg(F.countDistinct('ifa').alias('ifa_count')).sort(col('data_usage_freq'), ascending = True).cache()
 f_dist.show(20,0)
 
-#f_dist.coalesce(1).write.csv('s3a://ada-dev/azeef/projects/'+COUNTRY+'/202110/smart_dualsim/'+MONTH+'/rfm/dist_test/f_dist', header = True, mode='overwrite')
 
 ### M Distribution
 m_dist = rfm.groupBy('brq_m','carrier').agg(F.countDistinct('ifa').alias('ifa_count')).sort(col('brq_m'), ascending = True).cache()
 m_dist.show(20,0)
 
-#m_dist.coalesce(1).write.csv('s3a://ada-dev/azeef/projects/'+COUNTRY+'/202110/smart_dualsim/'+MONTH+'/rfm/dist_test/m_dist', header = True, mode = 'overwrite')
 
 
 ##########################
@@ -357,7 +352,7 @@ print(1849/232639*100) # August biweekly-2 multisim (0.79)
 # Primary/Secondary sim carrier breakdown  #
 ############################################
 
-data_path = "s3a://ada-dev/fadzilah/smart/rfm_multisim/monthly/202108"
+data_path = "s3a://ada-dev/azeef/smart/rfm_multisim/monthly/202108"
 #data_path = "s3a://ada-dev/fadzilah/smart/rfm_multisim/biweekly/202108_1"
 ms_df = spark.read.csv(data_path,header=True)
 
@@ -416,49 +411,6 @@ secondary_sims.show(10,0)
 |Cellcard     |53162|
 |0            |5223 |
 +-------------+-----+
-
-
-
-############################################
-# Monthly/Biweekly multisim matched IFA  #
-############################################
-data_path = "s3a://ada-dev/fadzilah/smart/rfm_multisim/monthly/202108"
-monthly = spark.read.csv(data_path,header=True)
-data_path = "s3a://ada-dev/fadzilah/smart/rfm_multisim/biweekly/202108_1"
-biweekly1 = spark.read.csv(data_path,header=True)
-data_path = "s3a://ada-dev/fadzilah/smart/rfm_multisim/biweekly/202108_2"
-biweekly2 = spark.read.csv(data_path,header=True)
-
-# Match IFA
-mb1 = monthly.join(biweekly1,on=['ifa'],how='inner')
-mb1.count()
-mb1.select("ifa").distinct().count()
-mb2 = monthly.join(biweekly2,on=['ifa'],how='inner')
-mb2.count()
-mb2.select("ifa").distinct().count()
-
-# Match IFA,Primary/Secondary sims
-mb1 = monthly.join(biweekly1,on=['ifa','primary_sim', 'secondary_sim'],how='inner')
-mb1.count()
-mb1.select("ifa").distinct().count()
-mb2 = monthly.join(biweekly2,on=['ifa','primary_sim', 'secondary_sim'],how='inner')
-mb2.count()
-mb2.select("ifa").distinct().count()
-
-
-mb1 = monthly.join(biweekly1,on=['ifa','primary_sim'],how='inner')
-mb1.count()
-mb1.select("ifa").distinct().count()
-mb2 = monthly.join(biweekly2,on=['ifa','primary_sim'],how='inner')
-mb2.count()
-mb2.select("ifa").distinct().count()
-
-mb1 = monthly.join(biweekly1,on=['ifa','secondary_sim'],how='inner')
-mb1.count()
-mb1.select("ifa").distinct().count()
-mb2 = monthly.join(biweekly2,on=['ifa','secondary_sim'],how='inner')
-mb2.count()
-mb2.select("ifa").distinct().count()
 
 
 
